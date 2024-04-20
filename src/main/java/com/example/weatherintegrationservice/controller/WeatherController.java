@@ -1,63 +1,78 @@
 package com.example.weatherintegrationservice.controller;
 
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 
 @RestController
 @RequestMapping("/weather")
 public class WeatherController {
 	
-	@Autowired
-    private HttpHeaders headers;
+	@Value("${rapidapi.key}")
+    private String apiKey;
 	
-	@Autowired
-	private RestTemplate restTemplate;
+	@Value("${weather.api.clientId}")
+    private String clientId;
+
+    @Value("${weather.api.clientSecret}")
+    private String clientSecret;
+	
+
 	
 	 @GetMapping("/forecastsummary")
-	    public ResponseEntity<String> getForecastSummary(@RequestParam String city) {
-	        String url = "https://wettercom-wettercom-default.p.rapidapi.com/forecast9/getForecastSummaryByLocationName";
-	        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
-	                .queryParam("q", city);
+	    public String getForecastSummary(@RequestParam String city) throws IOException {
+		 
+		 String url = "https://wettercom-wettercom-default.p.rapidapi.com/forecast9/location/" + city + "/summary";
 
-	        HttpEntity<?> entity = new HttpEntity<>(headers);
+         OkHttpClient client = new OkHttpClient();
 
-	        ResponseEntity<String> response = restTemplate.exchange(
-	                builder.toUriString(),
-	                HttpMethod.GET,
-	                entity,
-	                String.class
-	        );
+         Request request = new Request.Builder()
+                 .url(url)
+                 .addHeader("X-RapidAPI-Key", apiKey)
+                 .addHeader("X-RapidAPI-Proxy-Secret", clientSecret)
+                 .addHeader("X-RapidAPI-Proxy-Client-Id", clientId)
+                 .build();
 
-	        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+         try (Response response = client.newCall(request).execute()) {
+             return response.body().string();
+         }
 	    }
 
 	    @GetMapping("/hourlyforecast")
-	    public ResponseEntity<String> getHourlyForecast(@RequestParam String city) {
-	        String url = "https://wettercom-wettercom-default.p.rapidapi.com/forecast9/getHourlyForecastByLocationName";
-	        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
-	                .queryParam("q", city);
+	    public String getHourlyForecast(@RequestParam String city) throws IOException {
+	    	
+	    	String url = "https://wettercom-wettercom-default.p.rapidapi.com/forecast9/location/" + city + "/hourly";
 
-	        HttpEntity<?> entity = new HttpEntity<>(headers);
+            OkHttpClient client = new OkHttpClient();
 
-	        ResponseEntity<String> response = restTemplate.exchange(
-	                builder.toUriString(),
-	                HttpMethod.GET,
-	                entity,
-	                String.class
-	        );
+            Request request = new Request.Builder()
+                    .url(url)
+                    .addHeader("X-RapidAPI-Key", apiKey)
+                    .addHeader("X-RapidAPI-Proxy-Secret", clientSecret)
+                    .addHeader("X-RapidAPI-Proxy-Client-Id", clientId)
+                    .build();
 
-	        return ResponseEntity.status(response.getStatusCode()).body(response.getBody());
+            try (Response response = client.newCall(request).execute()) {
+                return response.body().string();
+            }
 	    }
 
 }
